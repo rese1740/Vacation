@@ -1,35 +1,99 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
+public enum EnemyState
+{
+    Patrol,
+    Chase
+}
 
 public class EnemyMovement : MonoBehaviour
 {
+    [Header("General")]
     [SerializeField] private float moveTime = 0.5f;
     [SerializeField] private float moveInterval = 1f;
-    [SerializeField] private Transform player; // 플레이어 참조
+    [SerializeField] private float chaseRange = 5f;
+    [SerializeField] private Transform player;
 
     private bool isMoving = false;
+    private int currentWaypointIndex = 0;
+    private EnemyState currentState = EnemyState.Patrol;
 
     private void Start()
     {
-        StartCoroutine(MoveRoutine());
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        StartCoroutine(StateMachine());
     }
 
-    private IEnumerator MoveRoutine()
+    private IEnumerator StateMachine()
     {
         while (true)
         {
-            if (!isMoving && player != null)
+            // 상태 전이 판단
+            float distToPlayer = Vector3.Distance(transform.position, player.position);
+            if (distToPlayer < chaseRange)
             {
-                Vector3 dir = GetMoveDirectionToPlayer();
-                Vector3 targetPos = transform.position + dir;
+                currentState = EnemyState.Chase;
+            }
+            else
+            {
+                currentState = EnemyState.Patrol;
+            }
 
-                yield return StartCoroutine(SmoothMove(targetPos));
+            // 상태별 이동
+            if (!isMoving)
+            {
+                Vector3 targetDir = Vector3.zero;
+
+                switch (currentState)
+                {
+                    case EnemyState.Patrol:
+                        targetDir = GetPatrolDirection();
+                        break;
+                    case EnemyState.Chase:
+                        targetDir = GetMoveDirectionToPlayer();
+                        break;
+                }
+
+                if (targetDir != Vector3.zero)
+                {
+                    Vector3 targetPos = transform.position + targetDir;
+                    yield return StartCoroutine(SmoothMove(targetPos));
+                }
             }
 
             yield return new WaitForSeconds(moveInterval);
         }
+    }
+
+    private Vector3 GetPatrolDirection()
+    {
+        if (Waypoint.Points.Length == 0) return Vector3.zero;
+
+        Transform target = Waypoint.Points[currentWaypointIndex];
+        Vector3 dir = target.position - transform.position;
+
+        if (Vector3.Distance(transform.position, target.position) < 0.1f)
+        {
+            currentWaypointIndex++;
+            if (currentWaypointIndex >= Waypoint.Points.Length)
+                currentWaypointIndex = 0;
+        }
+
+        Vector3 moveDir = (target.position - transform.position).normalized;
+        return new Vector3(Mathf.Round(moveDir.x), Mathf.Round(moveDir.y), 0);
+    }
+
+    private Vector3 GetMoveDirectionToPlayer()
+    {
+        Vector3 diff = player.position - transform.position;
+
+        if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
+            return new Vector3(Mathf.Sign(diff.x), 0, 0);
+        else if (Mathf.Abs(diff.y) > 0.01f)
+            return new Vector3(0, Mathf.Sign(diff.y), 0);
+
+        return Vector3.zero;
     }
 
     private IEnumerator SmoothMove(Vector3 end)
@@ -47,22 +111,5 @@ public class EnemyMovement : MonoBehaviour
         }
 
         isMoving = false;
-    }
-
-    private Vector3 GetMoveDirectionToPlayer()
-    {
-        Vector3 diff = player.position - transform.position;
-
-        // 가장 먼 축을 먼저 따라간다 (단순 추적)
-        if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
-        {
-            return new Vector3(Mathf.Sign(diff.x), 0, 0); // 좌우 우선
-        }
-        else if (Mathf.Abs(diff.y) > 0.01f)
-        {
-            return new Vector3(0, Mathf.Sign(diff.y), 0); // 상하
-        }
-
-        return Vector3.zero; // 같은 위치
     }
 }

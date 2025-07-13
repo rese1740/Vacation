@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Job
   - Enemy
+  - Bullet
+  - Generator
   layers:
   - Default
   - TransparentFX
