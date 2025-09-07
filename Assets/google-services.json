@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "12747725605",
+    "project_id": "multitest-ed36a",
+    "storage_bucket": "multitest-ed36a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:12747725605:android:b7c5f32f6ec198daa198cc",
+        "android_client_info": {
+          "package_name": "com.junwo.hideseek"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUcxfsAg5LVa7wNLoUYglY39kuGiRdVAw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

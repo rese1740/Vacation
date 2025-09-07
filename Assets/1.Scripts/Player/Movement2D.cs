@@ -1,14 +1,16 @@
+using Photon.Pun;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class Movement2D : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField]  private float	moveTime = 0.5f;								
-	public	Vector3	MoveDirection	{ set; get; } = Vector3.zero;   // 이동 방향
-   
-    public	bool IsMove	{ set; get; } = false;          
+    [SerializeField] private float moveTime = 0.5f;
+    public Vector3 MoveDirection { set; get; } = Vector3.zero;   // 이동 방향
+
+    public bool IsMove { set; get; } = false;
 
     [Header("Projectile Settings")]
     [SerializeField] private GameObject projectilePrefab;
@@ -19,24 +21,28 @@ public class Movement2D : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private PlayerSO playerSO;
+    private PhotonView pv;
 
     private void Update()
     {
-        float x = Input.GetAxisRaw("Horizontal");
-        float y = Input.GetAxisRaw("Vertical");
+        if (pv.IsMine)
+        {
+            float x = Input.GetAxisRaw("Horizontal");
+            float y = Input.GetAxisRaw("Vertical");
 
-        if (x != 0)
-		{
-            LookDirection = MoveDirection; // 방향 갱신
-            MoveDirection = new Vector3(x, 0, 0);
+            if (x != 0)
+            {
+                LookDirection = MoveDirection; // 방향 갱신
+                MoveDirection = new Vector3(x, 0, 0);
+            }
+            else if (y != 0)
+            {
+                LookDirection = MoveDirection; // 방향 갱신
+                MoveDirection = new Vector3(0, y, 0);
+            }
+            else
+                MoveDirection = Vector3.zero;
         }
-        else if (y != 0)
-		{
-            LookDirection = MoveDirection; // 방향 갱신
-            MoveDirection = new Vector3(0, y, 0);
-        }
-        else
-            MoveDirection = Vector3.zero;
 
 
         #region Projectile
@@ -47,7 +53,7 @@ public class Movement2D : MonoBehaviour
         }
 
         float cooldownElapsed = Time.time - lastFireTime;
-        fireButtonImg.fillAmount = Mathf.Clamp01(cooldownElapsed / fireCooldown);
+        // fireButtonImg.fillAmount = Mathf.Clamp01(cooldownElapsed / fireCooldown);
         #endregion
     }
 
@@ -61,39 +67,46 @@ public class Movement2D : MonoBehaviour
     }
 
     private IEnumerator Start()
-	{
-		while ( true )
-		{
-			if ( MoveDirection != Vector3.zero && IsMove == false )
-			{
-				Vector3 end = transform.position + MoveDirection;
+    {
+        pv = GetComponent<PhotonView>();
+        if (pv.IsMine)
+        {
+            playerSO = PlayerSO.Instance;
+            playerSO.playerJob = PlayerJob.Archer; // 예시로 Archer로 설정
+        }
 
-				yield return StartCoroutine(GridSmoothMovement(end));
-			}
+        while (true)
+        {
+            if (MoveDirection != Vector3.zero && IsMove == false)
+            {
+                Vector3 end = transform.position + MoveDirection;
 
-			yield return null;
-		}
-	}
+                yield return StartCoroutine(GridSmoothMovement(end));
+            }
 
-	private IEnumerator GridSmoothMovement(Vector3 end)
-	{
-		Vector3 start = transform.position;
-		float	current = 0;
-		float	percent = 0;
+            yield return null;
+        }
+    }
 
-		IsMove = true;
+    private IEnumerator GridSmoothMovement(Vector3 end)
+    {
+        Vector3 start = transform.position;
+        float current = 0;
+        float percent = 0;
 
-		while ( percent < 1 )
-		{
-			current += Time.deltaTime;
-			percent = current / moveTime;
+        IsMove = true;
 
-			transform.position = Vector3.Lerp(start, end, percent);
+        while (percent < 1)
+        {
+            current += Time.deltaTime;
+            percent = current / moveTime;
 
-			yield return null;
-		}
+            transform.position = Vector3.Lerp(start, end, percent);
 
-		IsMove = false;
-	}
+            yield return null;
+        }
+
+        IsMove = false;
+    }
 }
 
