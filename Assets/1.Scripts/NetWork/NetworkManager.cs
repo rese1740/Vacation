@@ -19,6 +19,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinOrCreateRoom("Room", new RoomOptions { MaxPlayers = 6}, null);
     }
 
+    public override void OnCreatedRoom()
+    {
+        base.OnCreatedRoom();
+    }
+
     public override void OnJoinedRoom()
     {
         PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);

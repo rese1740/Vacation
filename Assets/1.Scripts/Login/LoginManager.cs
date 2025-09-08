@@ -6,7 +6,6 @@ public class LoginManager : MonoBehaviour
     public TMP_InputField email;
     public TMP_InputField password;
 
-    public TextMeshProUGUI outputTxt;
     void Start()
     {
         FireBaseAuthManager.Instance.Init();

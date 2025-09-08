@@ -1,6 +1,7 @@
 using Firebase.Auth;
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 public class FireBaseAuthManager
 {
 
@@ -82,6 +83,7 @@ public class FireBaseAuthManager
 
             AuthResult result = task.Result;
             FirebaseUser newUser = result.User;
+            SceneManager.LoadScene("Lobby");
 
             Debug.Log("로그인 성공: " + newUser.Email);
         });
