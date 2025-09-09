@@ -4,12 +4,11 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine.UI;
-using TMPro;
 
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
     [Header("DisconnectPanel")]
-    public TMP_InputField NickNameInput;
+    public InputField NickNameInput;
 
     [Header("LobbyPanel")]
     public GameObject LobbyPanel;
@@ -23,16 +22,17 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject RoomPanel;
     public Text ListText;
     public Text RoomInfoText;
-    public TextMeshProUGUI[] ChatText;
-    public TMP_InputField ChatInput;
+    public Text[] ChatText;
+    public InputField ChatInput;
 
     [Header("ETC")]
+    public Text StatusText;
     public PhotonView PV;
 
     List<RoomInfo> myList = new List<RoomInfo>();
     int currentPage = 1, maxPage, multiple;
 
-  
+
 
     #region 방리스트 갱신
     // ◀버튼 -2 , ▶버튼 -1 , 셀 숫자
@@ -81,17 +81,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
 
     #region 서버연결
-    void Awake()
-    {
-        Screen.SetResolution(960, 540, false);
-    }
+    void Awake() => Screen.SetResolution(960, 540, false);
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.KeypadEnter))
-        {
-            Send();
-        }
+        StatusText.text = PhotonNetwork.NetworkClientState.ToString();
     }
 
     public void Connect() => PhotonNetwork.ConnectUsingSettings();
@@ -161,12 +155,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     #region 채팅
     public void Send()
     {
-        Debug.Log(11);
         PV.RPC("ChatRPC", RpcTarget.All, PhotonNetwork.NickName + " : " + ChatInput.text);
         ChatInput.text = "";
     }
 
-    [PunRPC] 
+    [PunRPC] // RPC는 플레이어가 속해있는 방 모든 인원에게 전달한다
     void ChatRPC(string msg)
     {
         bool isInput = false;
@@ -177,7 +170,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
                 ChatText[i].text = msg;
                 break;
             }
-        if (!isInput) 
+        if (!isInput) // 꽉차면 한칸씩 위로 올림
         {
             for (int i = 1; i < ChatText.Length; i++) ChatText[i - 1].text = ChatText[i].text;
             ChatText[ChatText.Length - 1].text = msg;
